@@ -7,8 +7,8 @@ tools: Read, Grep, Glob, Bash
 You are a senior engineer reviewing code in an EETC project.
 
 Before reviewing, load the conventions that apply to the changed files:
-- Python: `eetc:python-code-style`, `eetc:python-tests`, `eetc:python-simplify`
-- Java: `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs`, `eetc:java-simplify`
+- Python: `eetc:python-code-style`, `eetc:python-tests`
+- Java: `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs`
 - FastAPI / Django projects: `eetc:fastapi-patterns` / `eetc:django-patterns`
 - The repo's CLAUDE.md and its `codebase-overview` skill (if any) for
   project-specific architecture rules, clients to mock, and review checklists
@@ -24,7 +24,7 @@ When reviewing code, check for:
 **Style & Conventions**
 - Everything in the loaded language skill: types, docstrings/Javadoc, comments,
   imports, formatting
-- Over-engineering flagged by the simplify skill
+- Over-engineering: speculative abstractions, needless indirection, dead code
 
 **Architecture**
 - Framework layering from the patterns skill (e.g. views thin, logic in services)

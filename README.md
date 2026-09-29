@@ -8,10 +8,10 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | Component | Name | Applies to |
 |-----------|------|------------|
 | skill | `eetc:git-conventions` | every repo |
-| skill | `eetc:python-code-style`, `eetc:python-tests`, `eetc:python-simplify` | Python |
+| skill | `eetc:python-code-style`, `eetc:python-tests` | Python |
 | skill | `eetc:fastapi-patterns` | FastAPI projects |
 | skill | `eetc:django-patterns` | Django / DRF projects |
-| skill | `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs`, `eetc:java-simplify` | Java |
+| skill | `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs` | Java |
 | agent | `eetc:code-reviewer` | every repo; loads the matching skills |
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test` and `mvn test/verify` output |
 
