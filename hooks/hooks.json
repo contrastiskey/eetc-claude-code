@@ -1,0 +1,16 @@
+{
+  "description": "Trim pytest / Django / Maven test output to failures + summary",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/filter-test-output.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

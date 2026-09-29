@@ -1,0 +1,14 @@
+{
+  "name": "eetc-claude-code",
+  "description": "EETC's shared Claude Code plugin",
+  "owner": {
+    "name": "contrastiskey"
+  },
+  "plugins": [
+    {
+      "name": "eetc",
+      "source": "./",
+      "description": "Shared Claude Code conventions, skills and agents for EETC projects"
+    }
+  ]
+}
