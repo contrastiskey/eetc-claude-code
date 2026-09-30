@@ -9,7 +9,7 @@ You are a senior engineer reviewing code in an EETC project.
 Before reviewing, load the conventions that apply to the changed files:
 - Python: `eetc:python-code-style`, `eetc:python-tests`
 - Java: `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs`
-- Rust: `eetc:rust-code-style`
+- Rust: `eetc:rust-code-style`, `eetc:rust-tests`
 - FastAPI / Django projects: `eetc:fastapi-patterns` / `eetc:django-patterns`
 - The repo's CLAUDE.md and its `codebase-overview` skill (if any) for
   project-specific architecture rules, clients to mock, and review checklists

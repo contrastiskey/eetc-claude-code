@@ -4,7 +4,7 @@ description: >
   Rust coding conventions: the Rust API Guidelines (naming, interoperability,
   predictability, flexibility, type safety, dependability, debuggability,
   future proofing, macros, documentation) and the rust-analyzer style guide
-  (control flow, allocations, imports, tests).
+  (control flow, allocations, imports).
   TRIGGER when: writing, editing, formatting, or reviewing Rust code, or
   asked to "fix style" / "check code quality" in a Rust project.
   DO NOT TRIGGER when: working in a non-Rust language, or only reading code
@@ -589,11 +589,7 @@ Don't add small helper crates for a few lines of code. Established crates
 
 ### Tests
 
-- Minimal fixtures: strip everything the test doesn't need. Multi-line inputs
-  go in unindented raw string literals (`r#"..."#`).
-- No `#[should_panic]` — assert on the `Err` / `None` explicitly.
-- No `#[ignore]` — if behavior is wrong, assert the current behavior and add a
-  `// FIXME:` so the fix shows up as a test change.
+See `eetc:rust-tests`.
 
 ## What to avoid
 

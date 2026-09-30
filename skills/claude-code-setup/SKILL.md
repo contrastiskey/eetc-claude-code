@@ -204,8 +204,8 @@ leftovers from superseded skills (Step 2).
   are fine).
 - Every `eetc:*` skill named in CLAUDE.md exists in the plugin
   (`python-code-style`, `python-tests`, `java-code-style`, `java-docs`,
-  `java-tests`, `rust-code-style`, `fastapi-patterns`, `django-patterns`,
-  `git-conventions`).
+  `java-tests`, `rust-code-style`, `rust-tests`, `fastapi-patterns`,
+  `django-patterns`, `git-conventions`).
 - No secrets file was read, and no value from one appears in any written file.
 
 Finish with a short summary: files created / changed / deleted, existing
