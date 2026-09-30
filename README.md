@@ -46,6 +46,12 @@ who trusts the repo is prompted to install it:
   "extraKnownMarketplaces": {
     "eetc-claude-code": {
       "source": { "source": "github", "repo": "contrastiskey/eetc-claude-code" }
+    },
+    "ponytail": {
+      "source": { "source": "github", "repo": "DietrichGebert/ponytail" }
+    },
+    "typesafe-ai": {
+      "source": { "source": "github", "repo": "typesafe-ai/skills" }
     }
   },
   "enabledPlugins": { "eetc@eetc-claude-code": true }
@@ -55,9 +61,14 @@ who trusts the repo is prompted to install it:
 Or manually, inside Claude Code:
 
 ```
+/plugin marketplace add DietrichGebert/ponytail
+/plugin marketplace add typesafe-ai/skills
 /plugin marketplace add contrastiskey/eetc-claude-code
 /plugin install eetc@eetc-claude-code
 ```
+
+`eetc` depends on `ponytail@ponytail` and `typesafe@typesafe-ai`; installing it
+installs and enables both. Disabling either one disables `eetc`.
 
 ## Update
 

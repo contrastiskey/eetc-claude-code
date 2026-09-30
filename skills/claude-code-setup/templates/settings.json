@@ -35,6 +35,18 @@
         "source": "github",
         "repo": "contrastiskey/eetc-claude-code"
       }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    },
+    "typesafe-ai": {
+      "source": {
+        "source": "github",
+        "repo": "typesafe-ai/skills"
+      }
     }
   },
   "enabledPlugins": {

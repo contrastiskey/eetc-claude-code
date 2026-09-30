@@ -1,8 +1,12 @@
 {
   "name": "eetc",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Shared Claude Code conventions, skills and agents for EETC projects",
   "author": {
     "name": "contrastiskey"
-  }
+  },
+  "dependencies": [
+    "ponytail@ponytail",
+    "typesafe@typesafe-ai"
+  ]
 }

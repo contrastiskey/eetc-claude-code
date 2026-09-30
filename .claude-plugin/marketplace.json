@@ -4,6 +4,10 @@
   "owner": {
     "name": "contrastiskey"
   },
+  "allowCrossMarketplaceDependenciesOn": [
+    "ponytail",
+    "typesafe-ai"
+  ],
   "plugins": [
     {
       "name": "eetc",
