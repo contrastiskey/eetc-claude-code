@@ -15,7 +15,7 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | skill | `eetc:rust-code-style`, `eetc:rust-tests` | Rust |
 | skill | `/eetc:claude-code-setup` (user-invoked) | any repo: creates or re-standardizes `.claude/settings.json`, `CLAUDE.md` and the `codebase-overview` skill from the templates in `skills/claude-code-setup/templates/` |
 | agent | `eetc:code-reviewer` | every repo; loads the matching skills |
-| hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test` and `mvn test/verify` output |
+| hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test/verify` and `cargo test` / `cargo nextest run` output |
 
 The hook only rewrites (and auto-approves) a *plain* test command, optionally
 prefixed with `source .venv/bin/activate &&` / `uv run` / `poetry run`.

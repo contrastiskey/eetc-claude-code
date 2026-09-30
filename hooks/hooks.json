@@ -1,5 +1,5 @@
 {
-  "description": "Trim pytest / Django / Maven test output to failures + summary",
+  "description": "Trim pytest / Django / Maven / cargo test output to failures + summary",
   "hooks": {
     "PreToolUse": [
       {
