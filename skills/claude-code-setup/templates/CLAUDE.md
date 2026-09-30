@@ -18,8 +18,8 @@ jump straight to implementation.
 
 <!-- LANGUAGE RULES: keep the block for the repo's language, delete the rest.
      Python → python-code-style + python-tests. Java → java-code-style +
-     java-docs + java-tests. No eetc skill for the language (e.g. Rust) → drop
-     these rules. -->
+     java-docs + java-tests. Rust → rust-code-style. No eetc skill for the
+     language (e.g. Go) → drop these rules. -->
 
 **2. YOU MUST load and apply the python-code-style skill before writing any Python code**
 Skill: `eetc:python-code-style`
@@ -35,6 +35,9 @@ Skill: `eetc:java-docs`
 
 **4. YOU MUST load and apply the java-tests skill before writing or modifying any test class**
 Skill: `eetc:java-tests`
+
+**2. YOU MUST load and apply the rust-code-style skill before writing or modifying any Rust code**
+Skill: `eetc:rust-code-style`
 
 <!-- FRAMEWORK RULE: only for FastAPI or Django projects. -->
 

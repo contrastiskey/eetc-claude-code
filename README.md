@@ -12,6 +12,7 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | skill | `eetc:fastapi-patterns` | FastAPI projects |
 | skill | `eetc:django-patterns` | Django / DRF projects |
 | skill | `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs` | Java |
+| skill | `eetc:rust-code-style` | Rust |
 | skill | `/eetc:claude-code-setup` (user-invoked) | any repo: creates or re-standardizes `.claude/settings.json`, `CLAUDE.md` and the `codebase-overview` skill from the templates in `skills/claude-code-setup/templates/` |
 | agent | `eetc:code-reviewer` | every repo; loads the matching skills |
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test` and `mvn test/verify` output |
