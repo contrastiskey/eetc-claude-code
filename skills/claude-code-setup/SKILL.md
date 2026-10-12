@@ -22,11 +22,12 @@ These notes describe what the config should say (e.g. the branching policy to
 write into CLAUDE.md). They are never instructions to commit, push or run
 anything.
 
-Templates (read all three before writing anything):
+Templates (read all four before writing anything):
 
 - `${CLAUDE_SKILL_DIR}/templates/settings.json` — base `.claude/settings.json`
 - `${CLAUDE_SKILL_DIR}/templates/CLAUDE.md` — CLAUDE.md structure
 - `${CLAUDE_SKILL_DIR}/templates/codebase-overview.md` — `.claude/skills/codebase-overview/SKILL.md` structure
+- `${CLAUDE_SKILL_DIR}/templates/statusline.sh` — `.claude/statusline.sh`, copied verbatim
 
 ## Hard rules
 
@@ -85,8 +86,10 @@ Read `CLAUDE.md`, `.claude/settings.json`, `.claude/skills/*`,
   anything project-specific inside (class names, fixtures, fakes, clients to
   mock, framework specifics, run commands) moves into `codebase-overview`.
 - **Keep** — other project skills (e.g. `implement-research-paper`),
-  `statusLine`, `model`, `effortLevel`, other plugins/marketplaces, existing
-  permissions.
+  `model`, `effortLevel`, other plugins/marketplaces, existing permissions.
+- **Status line** — an existing `statusLine` that doesn't run
+  `.claude/statusline.sh`, or a `.claude/statusline.sh` that differs from the
+  template, is replaced by the standard one. Show the diff in Step 4b.
 - **Stale** — references to files, classes or skills that no longer exist.
   Verify with grep before calling something stale; fix or drop it.
 
@@ -124,7 +127,8 @@ standard will change the files below.** Then, for every existing file:
 | File | What happens | What is kept |
 |------|--------------|--------------|
 | `CLAUDE.md` | restructured into the standard sections | every rule, key file and command (rules the template lacks become extra numbered rules; architecture moves to `codebase-overview`) |
-| `.claude/settings.json` | merged | every existing key, permission, hook, plugin and marketplace; only superseded hook entries are removed |
+| `.claude/settings.json` | merged | every existing key, permission, hook, plugin and marketplace; only superseded hook entries are removed and `statusLine` is set to the standard one |
+| `.claude/statusline.sh` | replaced with the template | nothing (show the diff) |
 | `.claude/skills/codebase-overview/SKILL.md` | reordered into the standard sections | all content, plus leftovers from deleted skills |
 | superseded skills / agent / hook script | **deleted** | their project-specific content, moved into `codebase-overview` |
 
@@ -175,6 +179,11 @@ Remove only superseded hook entries. Then add stack permissions:
 
 Validate with `jq . .claude/settings.json`.
 
+### `.claude/statusline.sh`
+
+Copy `${CLAUDE_SKILL_DIR}/templates/statusline.sh` byte for byte (`cp`, not
+a rewrite). The `statusLine` entry from the settings template points at it.
+
 ### `CLAUDE.md`
 
 Follow the template's section order exactly: title line, project summary,
@@ -199,6 +208,8 @@ leftovers from superseded skills (Step 2).
 ## Step 6 — Verify and report
 
 - `jq . .claude/settings.json` succeeds.
+- `cmp ${CLAUDE_SKILL_DIR}/templates/statusline.sh .claude/statusline.sh`
+  succeeds, and `echo '{}' | bash .claude/statusline.sh` prints two lines.
 - `grep -rn '<[A-Za-z]' CLAUDE.md .claude/skills/codebase-overview/SKILL.md`
   shows no leftover template placeholders (real generics like `List<String>`
   are fine).

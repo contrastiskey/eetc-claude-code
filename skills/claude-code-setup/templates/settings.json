@@ -51,5 +51,9 @@
   },
   "enabledPlugins": {
     "eetc@eetc-claude-code": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash .claude/statusline.sh"
   }
 }
