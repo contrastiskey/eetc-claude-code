@@ -52,12 +52,19 @@ Skill: `eetc:fastapi-patterns`
 modifying models, serializers, views, or services**
 Skill: `eetc:django-patterns`
 
-<!-- ALWAYS: the last two rules, renumbered to follow the ones above. -->
+<!-- ALWAYS: the last three rules, renumbered to follow the ones above. -->
 
 **N. YOU MUST run /simplify after writing code and before running tests**
 After finishing an implementation, invoke the `/simplify` skill to review
 the changed code for reuse, quality, and efficiency — and fix any issues
 found — before proceeding to run tests.
+
+**N. YOU MUST check and update the codebase-overview skill if needed after any major code change**
+Once you finish editing code in a way that adds, removes, or reshapes a layer,
+module, data flow, external dependency, environment variable, or test setup,
+check `.claude/skills/codebase-overview/SKILL.md`. If it now gets
+something wrong or leaves something out, update it; if it is still accurate,
+leave it as is.
 
 **N. YOU MUST load and apply the git-conventions skill before creating commits or PRs**
 Skill: `eetc:git-conventions`
