@@ -17,6 +17,13 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | agent | `eetc:code-reviewer` | every repo; loads the matching skills |
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test/verify` and `cargo test` / `cargo nextest run` output |
 | hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
+| hook | `hooks/trim-output.sh` | shrinks what Claude sees from *successful* noisy commands: installs (`pip`, `uv`, `poetry`, `npm`, `pnpm`, `yarn`) and `docker build` keep their first/last lines plus warnings and summaries; `cargo build/check/clippy/doc` drop crate progress lines; `mvn` lifecycle builds keep only warnings, errors and the summary; git diffs/logs replace each lockfile's diff with one line |
+
+The trim hook runs after the command (`PostToolUse`), so commands run
+unchanged under the normal permission rules. Failed commands aren't trimmed,
+so errors always reach Claude in full. It only trims a single command
+(optionally after `cd <dir> &&`), never a chain like `uv sync && pytest`, and
+it leaves a lockfile diff alone when the command names the lockfile.
 
 The format hook never reformats a project that isn't already set up for that
 formatter, and it skips silently when the formatter isn't installed (it checks

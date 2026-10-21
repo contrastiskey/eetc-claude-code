@@ -1,5 +1,5 @@
 {
-  "description": "Trim pytest / Django / Maven / cargo test output to failures + summary; format edited files with the project's configured formatter",
+  "description": "Trim test runs, successful installs/builds and lockfile diffs to what matters; format edited files with the project's configured formatter",
   "hooks": {
     "PreToolUse": [
       {
@@ -19,6 +19,15 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/format-on-edit.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/trim-output.sh\""
           }
         ]
       }
