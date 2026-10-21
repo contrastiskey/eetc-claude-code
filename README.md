@@ -15,7 +15,7 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | skill | `eetc:rust-code-style`, `eetc:rust-tests` | Rust |
 | skill | `/eetc:claude-code-setup` (user-invoked) | any repo: creates or re-standardizes `.claude/settings.json`, `CLAUDE.md` and the `codebase-overview` skill from the templates in `skills/claude-code-setup/templates/` |
 | agent | `eetc:code-reviewer` | every repo; loads the matching skills |
-| hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test/verify` and `cargo test` / `cargo nextest run` output |
+| hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test` / `mvn verify` and `cargo test` / `cargo nextest run` output to failures and the summary |
 | hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
 | hook | `hooks/trim-output.sh` | shrinks what Claude sees from *successful* noisy commands: installs (`pip`, `uv`, `poetry`, `npm`, `pnpm`, `yarn`) and `docker build` keep their first/last lines plus warnings and summaries; `cargo build/check/clippy/doc` drop crate progress lines; `mvn` lifecycle builds keep only warnings, errors and the summary; git diffs/logs replace each lockfile's diff with one line |
 
@@ -29,10 +29,17 @@ The format hook never reformats a project that isn't already set up for that
 formatter, and it skips silently when the formatter isn't installed (it checks
 `.venv/bin` first, then `PATH`).
 
-The test hook only rewrites (and auto-approves) a *plain* test command, optionally
-prefixed with `source .venv/bin/activate &&` / `uv run` / `poetry run`.
-Anything chained, substituted or redirected passes through to the normal
-permission flow.
+The test hook auto-approves the commands it rewrites, so it fails closed. It
+only touches a *plain* test command, optionally prefixed with
+`source .venv/bin/activate &&` / `uv run` / `poetry run`, whose every argument
+is on its allowlist: known side-effect-free flags (e.g. `-q`, `-x`, `-k EXPR`,
+`--lf`, `-p <crate>`, `-pl <module>`, `-Dtest=...`) and test paths inside the
+project. Maven must run only `test` and/or `verify`: no other phase (`clean`,
+`package`, `install`, `deploy`...), no `plugin:goal`, no `-P` profile. Anything
+else (chained, substituted, redirected, an unknown flag such as
+`--basetemp` or `--config`, an absolute or `..` path) passes through unchanged
+to the normal permission flow. Your deny and ask rules still apply to the
+commands it approves.
 
 Project-specific knowledge (architecture, fixtures, clients to mock, tooling
 commands, permissions, statusline) stays in each project's CLAUDE.md,
