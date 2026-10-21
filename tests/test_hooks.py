@@ -256,5 +256,44 @@ class FormatOnEdit(unittest.TestCase):
                     self.assertEqual(path.read_text(), source)
 
 
+class Statusline(unittest.TestCase):
+    """The template statusline shows the rate-limit reset time on macOS and Linux."""
+
+    PAYLOAD = {"rate_limits": {"five_hour": {"used_percentage": 42.5, "resets_at": 1767225600}}}
+
+    def render(self, fake_date=None):
+        """Runs the statusline, optionally with ``date`` replaced by a shell script body."""
+        with tempfile.TemporaryDirectory() as bin_dir:
+            path = os.environ["PATH"]
+            if fake_date is not None:
+                shim = Path(bin_dir) / "date"
+                shim.write_text(f"#!/bin/bash\n{fake_date}\n")
+                shim.chmod(0o755)
+                path = f"{bin_dir}:{path}"
+            result = subprocess.run(
+                ["bash", str(ROOT / "skills/claude-code-setup/templates/statusline.sh")],
+                input=json.dumps(self.PAYLOAD),
+                capture_output=True,
+                text=True,
+                env={**os.environ, "PATH": path},
+                check=True,
+            )
+        self.assertEqual(result.stderr, "")
+        return result.stdout
+
+    def test_native_date(self):
+        self.assertRegex(self.render(), r"↻ \d\d:\d\d")
+
+    def test_gnu_date_fallback(self):
+        # GNU `date -r` reads a file's mtime, so an epoch fails; `-d @epoch` works
+        gnu = '[ "$1" = -d ] && [ "$2" = @1767225600 ] && echo 07:00 && exit 0; exit 1'
+        self.assertIn("↻ 07:00", self.render(gnu))
+
+    def test_no_working_date_hides_reset_time_silently(self):
+        out = self.render("echo 'date: unsupported' >&2; exit 1")
+        self.assertIn("session:", out)
+        self.assertNotIn("↻", out)
+
+
 if __name__ == "__main__":
     unittest.main()

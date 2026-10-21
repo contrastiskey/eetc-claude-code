@@ -64,6 +64,10 @@ still decide what runs without asking: read-only commands and `git add` /
 `rebase`, `clean`, `checkout`, `find`, `sed`, `awk` and anything else prompt.
 On Linux the sandbox needs `bubblewrap` and `socat`.
 
+It also installs `.claude/statusline.sh` (model, branch, context bar, cost or
+tokens, 5-hour usage with its reset time). It works on macOS and Linux and
+needs `jq`.
+
 ## Install
 
 Per project — commit this to the project's `.claude/settings.json` so everyone

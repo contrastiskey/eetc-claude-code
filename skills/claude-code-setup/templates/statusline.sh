@@ -101,7 +101,10 @@ if [ -n "$SESSION_PCT" ]; then
         SESSION_COLOR="$GREEN"
     fi
     SESSION_PART=" ${DIM}|${RESET} ${DIM}session:${RESET}${SESSION_COLOR}${SESSION_PCT}%${RESET}"
-    [ -n "$SESSION_RESET" ] && SESSION_PART="${SESSION_PART} ${DIM}↻ $(date -r "${SESSION_RESET%.*}" +%H:%M)${RESET}"
+    # epoch → HH:MM: BSD/macOS `date -r`, then GNU/Linux `date -d @`; neither → no reset time
+    RESET_AT=""
+    [ -n "$SESSION_RESET" ] && RESET_AT=$(date -r "${SESSION_RESET%.*}" +%H:%M 2>/dev/null || date -d "@${SESSION_RESET%.*}" +%H:%M 2>/dev/null)
+    [ -n "$RESET_AT" ] && SESSION_PART="${SESSION_PART} ${DIM}↻ ${RESET_AT}${RESET}"
 fi
 
 printf '%b\n' "${BAR_COLOR}${BAR}${RESET} ${PCT}%${COST_PART}${SESSION_PART}${LINES_PART} ${DIM}|${RESET} ⏱️  ${MINS}m ${SECS}s"
