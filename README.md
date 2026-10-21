@@ -16,8 +16,13 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | skill | `/eetc:claude-code-setup` (user-invoked) | any repo: creates or re-standardizes `.claude/settings.json`, `CLAUDE.md` and the `codebase-overview` skill from the templates in `skills/claude-code-setup/templates/` |
 | agent | `eetc:code-reviewer` | every repo; loads the matching skills |
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test/verify` and `cargo test` / `cargo nextest run` output |
+| hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
 
-The hook only rewrites (and auto-approves) a *plain* test command, optionally
+The format hook never reformats a project that isn't already set up for that
+formatter, and it skips silently when the formatter isn't installed (it checks
+`.venv/bin` first, then `PATH`).
+
+The test hook only rewrites (and auto-approves) a *plain* test command, optionally
 prefixed with `source .venv/bin/activate &&` / `uv run` / `poetry run`.
 Anything chained, substituted or redirected passes through to the normal
 permission flow.
