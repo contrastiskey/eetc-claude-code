@@ -55,6 +55,15 @@ them. It never reads secrets files and never commits. To try it before the
 plugin is enabled in that repo, start the session with
 `claude --plugin-dir ~/IdeaProjects/eetc-claude-code`.
 
+The generated `.claude/settings.json` turns on Claude Code's sandbox: every
+Bash command runs with no read access to `.env*`, `secrets/` or `~/.ssh` /
+`~/.aws`-style credentials, writes only inside the project, and network access
+only to package registries and GitHub (other hosts prompt). Permission rules
+still decide what runs without asking: read-only commands and `git add` /
+`git commit`, plus the stack's build/test subcommands. `git push`, `reset`,
+`rebase`, `clean`, `checkout`, `find`, `sed`, `awk` and anything else prompt.
+On Linux the sandbox needs `bubblewrap` and `socat`.
+
 ## Install
 
 Per project — commit this to the project's `.claude/settings.json` so everyone

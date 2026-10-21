@@ -86,7 +86,11 @@ Read `CLAUDE.md`, `.claude/settings.json`, `.claude/skills/*`,
   anything project-specific inside (class names, fixtures, fakes, clients to
   mock, framework specifics, run commands) moves into `codebase-overview`.
 - **Keep** — other project skills (e.g. `implement-research-paper`),
-  `model`, `effortLevel`, other plugins/marketplaces, existing permissions.
+  `model`, `effortLevel`, other plugins/marketplaces, existing permissions
+  and sandbox settings. List broad existing allow rules (`Bash(git *)`,
+  `Bash(mvn *)`, `Bash(cargo *)`, `Bash(uv *)`, `Bash(find *)`, `Bash(sed *)`,
+  `Bash(awk *)`...) in the proposal as "consider narrowing" to the rules
+  below; only change them if the user agrees.
 - **Status line** — an existing `statusLine` that doesn't run
   `.claude/statusline.sh`, or a `.claude/statusline.sh` that differs from the
   template, is replaced by the standard one. Show the diff in Step 4b.
@@ -127,7 +131,7 @@ standard will change the files below.** Then, for every existing file:
 | File | What happens | What is kept |
 |------|--------------|--------------|
 | `CLAUDE.md` | restructured into the standard sections | every rule, key file and command (rules the template lacks become extra numbered rules; architecture moves to `codebase-overview`) |
-| `.claude/settings.json` | merged | every existing key, permission, hook, plugin and marketplace; only superseded hook entries are removed and `statusLine` is set to the standard one |
+| `.claude/settings.json` | merged | every existing key, permission, sandbox setting, hook, plugin and marketplace; only superseded hook entries are removed, missing `sandbox` entries are added and `statusLine` is set to the standard one |
 | `.claude/statusline.sh` | replaced with the template | nothing (show the diff) |
 | `.claude/skills/codebase-overview/SKILL.md` | reordered into the standard sections | all content, plus leftovers from deleted skills |
 | superseded skills / agent / hook script | **deleted** | their project-specific content, moved into `codebase-overview` |
@@ -160,22 +164,54 @@ asked for one.
 ### `.claude/settings.json`
 
 Start from the template. When the file exists, **merge**: keep every existing
-key and permission, add missing template entries, and add the `eetc-claude-code`
-marketplace and `eetc@eetc-claude-code` plugin next to any existing ones.
-Remove only superseded hook entries. Then add stack permissions:
+key and permission, add missing template entries (including each `sandbox`
+entry), and add the `eetc-claude-code` marketplace and `eetc@eetc-claude-code`
+plugin next to any existing ones. Remove only superseded hook entries.
+
+The template allows only read-only commands plus `git add` / `git commit`.
+Anything that writes or runs arbitrary code (`git push`/`reset`/`rebase`/
+`clean`/`checkout`, `find -exec`, `sed -i`, `awk system()`, `sort -o`) prompts.
+Add stack permissions the same way: build, test and lint subcommands only,
+never a whole tool (`Bash(mvn *)` allows `mvn deploy`, `Bash(cargo *)` allows
+`cargo publish`, `Bash(uv *)` allows `uv run <anything>`). Add each rule in
+both forms, bare and with ` *` (e.g. `Bash(cargo test)` and `Bash(cargo test *)`):
 
 | Stack | Add to `allow` |
 |-------|----------------|
-| Python | `Bash(pytest *)`, `Bash(pytest)`, `Bash(python -m pytest *)`, plus the package manager: `Bash(uv *)` / `Bash(poetry *)` / `Bash(pip *)` + `Bash(pip-compile *)` |
-| Django | `Bash(python manage.py test *)`, `Bash(python manage.py test)`, `Bash(python manage.py makemigrations *)` |
-| Maven / Gradle | `Bash(mvn *)` / `Bash(./gradlew *)`, `Bash(java *)` |
-| Rust | `Bash(cargo *)` |
+| Python | `pytest`, `python -m pytest`, plus the package manager: uv → `uv sync`, `uv lock`, `uv run pytest`; poetry → `poetry install`, `poetry lock`, `poetry run pytest`; pip-tools → `pip-compile` |
+| Django | `python manage.py test`, `python manage.py makemigrations` |
+| Maven | `mvn compile`, `mvn test`, `mvn verify` |
+| Gradle | `./gradlew build`, `./gradlew test`, `./gradlew check` |
+| Rust | `cargo build`, `cargo check`, `cargo clippy`, `cargo test`, `cargo fmt`, `cargo doc`, `cargo nextest run` |
 | Makefile | `Bash(make <target>)` for each local-only target (format, test, coverage, install, run). **Never** deploy, publish, release or anything touching production |
 
-| Secrets present | Add to `deny` |
-|-----------------|---------------|
-| `local_settings.py` | `Read(./local_settings.py)`, `Edit(./local_settings.py)` |
-| other secrets files | `Read(./<path>)` and `Edit(./<path>)` |
+| Secrets present | Add to `deny` | Add to `sandbox.filesystem.denyRead` |
+|-----------------|---------------|--------------------------------------|
+| `local_settings.py` | `Read(./local_settings.py)`, `Edit(./local_settings.py)` | `./local_settings.py` |
+| other secrets files | `Read(./<path>)` and `Edit(./<path>)` | `./<path>` |
+
+Read deny rules stop the Read tool and obvious `cat <file>` commands, but not
+a script that opens the file; `sandbox.filesystem.denyRead` stops every
+sandboxed command. The template's sandbox:
+
+- Runs every Bash command sandboxed. `autoAllowBashIfSandboxed: false` keeps
+  the allow rules and prompts above in charge; the sandbox is a second fence.
+- `allowUnsandboxedCommands: false`: Claude can't retry a blocked command
+  outside the sandbox (an allow rule like `Bash(cat *)` would approve that
+  retry). Only `excludedCommands` run outside it: `docker` and git network
+  commands (they don't work sandboxed); none of them is allowed, so they prompt.
+- Denies reads of `.env*`, `secrets/` and the home-dir credential stores
+  (`~/.ssh`, `~/.aws`, ...); writes are limited to the project and temp dir.
+- Allows only package-registry and GitHub hosts; any other host prompts, and
+  dev servers can bind local ports.
+
+Per project, add to the sandbox only what its workflows need: a private
+registry or mirror to `network.allowedDomains`, a tool that can't run
+sandboxed (e.g. `gcloud *`, `psql *`) to `excludedCommands`. Testcontainers
+needs the Docker socket (`network.allowUnixSockets`), which gives sandboxed
+commands full Docker access, so ask before adding it. On Linux and WSL2 the
+sandbox needs `bubblewrap` and `socat`; without them commands run unsandboxed
+with the normal prompts.
 
 Validate with `jq . .claude/settings.json`.
 

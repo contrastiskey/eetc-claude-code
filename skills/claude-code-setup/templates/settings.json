@@ -2,23 +2,32 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(git *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log)",
+      "Bash(git log *)",
+      "Bash(git show)",
+      "Bash(git show *)",
+      "Bash(git blame *)",
+      "Bash(git branch)",
+      "Bash(git branch -a)",
+      "Bash(git branch -vv)",
+      "Bash(git branch --show-current)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
       "Bash(ls *)",
       "Bash(ls)",
       "Bash(cat *)",
       "Bash(grep *)",
-      "Bash(find *)",
       "Bash(echo *)",
       "Bash(pwd)",
       "Bash(which *)",
       "Bash(wc *)",
       "Bash(head *)",
       "Bash(tail *)",
-      "Bash(diff *)",
-      "Bash(sort *)",
-      "Bash(uniq *)",
-      "Bash(awk *)",
-      "Bash(sed *)"
+      "Bash(diff *)"
     ],
     "deny": [
       "Read(./.env)",
@@ -28,6 +37,49 @@
       "Read(./secrets/**)"
     ],
     "defaultMode": "default"
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": [
+      "docker *",
+      "git push *",
+      "git fetch *",
+      "git pull *"
+    ],
+    "filesystem": {
+      "denyRead": [
+        "./.env",
+        "./.env.*",
+        "./secrets",
+        "~/.ssh",
+        "~/.aws",
+        "~/.gnupg",
+        "~/.netrc",
+        "~/.pypirc",
+        "~/.cargo/credentials.toml",
+        "~/.docker/config.json"
+      ]
+    },
+    "network": {
+      "allowLocalBinding": true,
+      "allowedDomains": [
+        "pypi.org",
+        "files.pythonhosted.org",
+        "crates.io",
+        "index.crates.io",
+        "static.crates.io",
+        "static.rust-lang.org",
+        "repo.maven.apache.org",
+        "repo1.maven.org",
+        "plugins.gradle.org",
+        "services.gradle.org",
+        "registry.npmjs.org",
+        "github.com",
+        "*.githubusercontent.com"
+      ]
+    }
   },
   "extraKnownMarketplaces": {
     "eetc-claude-code": {
