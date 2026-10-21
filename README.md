@@ -127,3 +127,19 @@ They feed JSON to each hook and check what it prints: which test commands the
 test hook rewrites and approves (and which must pass through), what the trim
 hook cuts or leaves alone, and that the format hook is a no-op without a
 formatter config. Run them after every hook change.
+
+Skill trigger evals (`evals/`, run with `claude plugin eval`):
+
+```bash
+evals/run.sh                                   # all 8 cases × 3 runs
+evals/run.sh --case rust-code-style --runs 1   # one case, one run
+```
+
+Each language skill has a case that must load it and must not load the other
+languages' skills (e.g. a Rust task never loads `python-code-style`). Another
+case, an unrelated question, must load no eetc skill. Every run is a real
+Claude session on your account: one case-run costs about $0.05 to $0.20, so a
+full run is roughly $2 to $5. The script evaluates a temp copy of the plugin
+without `dependencies`, because the isolated eval session can't install
+ponytail or typesafe and would silently skip the plugin. Reports go to
+`evals/results/` (git-ignored).
