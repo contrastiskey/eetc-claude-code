@@ -15,6 +15,15 @@ OUTPUT_TOKENS=$(echo "$input" | jq -r '.context_window.total_output_tokens // 0'
 SESSION_PCT=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty' | cut -d. -f1)
 SESSION_RESET=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 
+# current context size for the eetc context-handoff hook (hooks don't get it)
+SESSION_ID=$(echo "$input" | jq -r '.session_id // ""')
+CTX_TOKENS=$(echo "$input" | jq -r '.context_window.current_usage // empty
+    | (.input_tokens // 0) + (.cache_creation_input_tokens // 0) + (.cache_read_input_tokens // 0)')
+if [[ $SESSION_ID =~ ^[A-Za-z0-9_-]+$ && -n $CTX_TOKENS ]]; then
+    TMP_DIR="${TMPDIR:-/tmp}"
+    echo "$CTX_TOKENS" 2>/dev/null > "${TMP_DIR%/}/claude-ctx-${SESSION_ID}"
+fi
+
 # colors
 CYAN='\033[36m'
 GREEN='\033[32m'

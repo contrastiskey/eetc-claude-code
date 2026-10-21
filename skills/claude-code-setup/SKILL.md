@@ -36,8 +36,8 @@ Templates (read all four before writing anything):
   any file whose name suggests secrets. Listing their *names* is fine;
   document them in Key Files as "secrets — DO NOT READ".
 - Environment variable tables list names and purposes, never values.
-- Touch only `CLAUDE.md`, `.claude/` and, when the user asks for a backup,
-  `.claude-setup-backup/` in the project. Never touch `~/.claude/`, and never
+- Touch only `CLAUDE.md`, `.claude/`, one line in `.gitignore` and, when the
+  user asks for a backup, `.claude-setup-backup/` in the project. Never touch `~/.claude/`, and never
   `.claude/settings.local.json` (personal).
 - **Never alter an existing setup without explicit consent.** Any change to
   an existing `CLAUDE.md` or to anything already under `.claude/` (edit,
@@ -134,6 +134,7 @@ standard will change the files below.** Then, for every existing file:
 | `.claude/settings.json` | merged | every existing key, permission, sandbox setting, hook, plugin and marketplace; only superseded hook entries are removed, missing `sandbox` entries are added and `statusLine` is set to the standard one |
 | `.claude/statusline.sh` | replaced with the template | nothing (show the diff) |
 | `.claude/skills/codebase-overview/SKILL.md` | reordered into the standard sections | all content, plus leftovers from deleted skills |
+| `.gitignore` | `.claude/handoff.md*` appended (skipped if already there) | everything else |
 | superseded skills / agent / hook script | **deleted** | their project-specific content, moved into `codebase-overview` |
 
 List deletions separately and by path — they are the destructive part. Add a
@@ -220,6 +221,12 @@ Validate with `jq . .claude/settings.json`.
 Copy `${CLAUDE_SKILL_DIR}/templates/statusline.sh` byte for byte (`cp`, not
 a rewrite). The `statusLine` entry from the settings template points at it.
 
+### `.gitignore`
+
+Append `.claude/handoff.md*` unless the file already has that line (create
+the file if the project has none). It keeps the eetc context-handoff note
+(`handoff.md`, then `handoff.md.used`) out of git.
+
 ### `CLAUDE.md`
 
 Follow the template's section order exactly: title line, project summary,
@@ -246,6 +253,8 @@ leftovers from superseded skills (Step 2).
 - `jq . .claude/settings.json` succeeds.
 - `cmp ${CLAUDE_SKILL_DIR}/templates/statusline.sh .claude/statusline.sh`
   succeeds, and `echo '{}' | bash .claude/statusline.sh` prints two lines.
+- `grep -qxF '.claude/handoff.md*' .gitignore` succeeds (unless the user left
+  an existing `.gitignore` as it was).
 - `grep -rn '<[A-Za-z]' CLAUDE.md .claude/skills/codebase-overview/SKILL.md`
   shows no leftover template placeholders (real generics like `List<String>`
   are fine).

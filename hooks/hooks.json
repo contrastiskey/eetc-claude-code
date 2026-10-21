@@ -1,5 +1,5 @@
 {
-  "description": "Trim test runs, successful installs/builds and lockfile diffs to what matters; format edited files with the project's configured formatter",
+  "description": "Trim test runs, successful installs/builds and lockfile diffs to what matters; format edited files with the project's configured formatter; offer a handoff note and /clear when a session's context reaches 444k tokens, and load the note after /clear",
   "hooks": {
     "PreToolUse": [
       {
@@ -28,6 +28,27 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/trim-output.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/context-handoff.sh\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/load-handoff.sh\""
           }
         ]
       }

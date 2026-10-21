@@ -294,6 +294,84 @@ class Statusline(unittest.TestCase):
         self.assertIn("session:", out)
         self.assertNotIn("↻", out)
 
+    def run_with_tmpdir(self, payload, tmp):
+        subprocess.run(
+            ["bash", str(ROOT / "skills/claude-code-setup/templates/statusline.sh")],
+            input=json.dumps(payload),
+            capture_output=True,
+            text=True,
+            env={**os.environ, "TMPDIR": tmp},
+            check=True,
+        )
+
+    def test_writes_current_context_size_for_the_handoff_hook(self):
+        usage = {"input_tokens": 10, "output_tokens": 999, "cache_creation_input_tokens": 200, "cache_read_input_tokens": 3000}
+        with tempfile.TemporaryDirectory() as tmp:
+            self.run_with_tmpdir({"session_id": "s1", "context_window": {"current_usage": usage}}, tmp)
+            self.assertEqual((Path(tmp) / "claude-ctx-s1").read_text().strip(), "3210")
+
+    def test_writes_nothing_without_current_usage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.run_with_tmpdir({"session_id": "s1", "context_window": {"current_usage": None}}, tmp)
+            self.assertEqual(os.listdir(tmp), [])
+
+
+class ContextHandoff(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.project = tempfile.mkdtemp()
+        self.addCleanup(subprocess.run, ["rm", "-rf", self.tmp, self.project])
+        self.env = {"TMPDIR": self.tmp, "CLAUDE_PROJECT_DIR": self.project}
+
+    def stop(self, tokens=None, session="s1", **env):
+        if tokens is not None:
+            (Path(self.tmp) / f"claude-ctx-{session}").write_text(f"{tokens}\n")
+        return run_hook("context-handoff.sh", {"session_id": session, "hook_event_name": "Stop"}, env={**self.env, **env})
+
+    def test_below_threshold_is_silent(self):
+        self.assertEqual(self.stop(443999), "")
+
+    def test_at_threshold_blocks_once_per_session(self):
+        out = json.loads(self.stop(444000))
+        self.assertEqual(out["decision"], "block")
+        for text in ["AskUserQuestion", '"Write handoff and clear"', '"Continue"', "/clear",
+                     f"{self.project}/.claude/handoff.md", "headless"]:
+            self.assertIn(text, out["reason"])
+        self.assertEqual(self.stop(500000), "")
+        # another session still gets asked
+        self.assertIn("block", self.stop(444000, session="s2"))
+
+    def test_missing_token_file_is_silent(self):
+        self.assertEqual(self.stop(), "")
+
+    def test_env_var_overrides_threshold(self):
+        self.assertEqual(self.stop(1000, EETC_HANDOFF_TOKENS="1001"), "")
+        self.assertIn("block", self.stop(1001, EETC_HANDOFF_TOKENS="1001"))
+
+    def test_bad_session_id_is_ignored(self):
+        # threshold 0 would block any accepted session, even without a token file
+        self.assertIn("block", self.stop(EETC_HANDOFF_TOKENS="0"))
+        self.assertEqual(self.stop(session="../x", EETC_HANDOFF_TOKENS="0"), "")
+
+    def test_load_handoff_prints_note_once(self):
+        note = Path(self.project) / ".claude" / "handoff.md"
+        note.parent.mkdir()
+        note.write_text("next: ship it\n")
+        payload = {"hook_event_name": "SessionStart", "source": "clear"}
+        self.assertEqual(run_hook("load-handoff.sh", payload, env=self.env),
+                         "Handoff from the previous session:\nnext: ship it\n")
+        self.assertFalse(note.exists())
+        self.assertTrue(note.with_name("handoff.md.used").exists())
+        self.assertEqual(run_hook("load-handoff.sh", payload, env=self.env), "")
+
+    def test_load_handoff_without_note_is_silent(self):
+        self.assertEqual(run_hook("load-handoff.sh", {"source": "clear"}, env=self.env), "")
+
+    def test_registered_on_stop_and_after_clear(self):
+        hooks = json.loads((HOOKS / "hooks.json").read_text())["hooks"]
+        self.assertIn("context-handoff.sh", hooks["Stop"][0]["hooks"][0]["command"])
+        self.assertEqual(hooks["SessionStart"][0]["matcher"], "clear")
+
 
 if __name__ == "__main__":
     unittest.main()

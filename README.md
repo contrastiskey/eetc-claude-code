@@ -18,6 +18,8 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test` / `mvn verify` and `cargo test` / `cargo nextest run` output to failures and the summary |
 | hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
 | hook | `hooks/trim-output.sh` | shrinks what Claude sees from *successful* noisy commands: installs (`pip`, `uv`, `poetry`, `npm`, `pnpm`, `yarn`) and `docker build` keep their first/last lines plus warnings and summaries; `cargo build/check/clippy/doc` drop crate progress lines; `mvn` lifecycle builds keep only warnings, errors and the summary; git diffs/logs replace each lockfile's diff with one line |
+| hook | `hooks/context-handoff.sh` | `Stop`: once a session's current context reaches 444,000 tokens, Claude asks whether to write a handoff note and `/clear`, or continue (once per session) |
+| hook | `hooks/load-handoff.sh` | `SessionStart` after `/clear`: loads that handoff note into the new session |
 
 The trim hook runs after the command (`PostToolUse`), so commands run
 unchanged under the normal permission rules. Failed commands aren't trimmed,
@@ -40,6 +42,21 @@ else (chained, substituted, redirected, an unknown flag such as
 `--basetemp` or `--config`, an absolute or `..` path) passes through unchanged
 to the normal permission flow. Your deny and ask rules still apply to the
 commands it approves.
+
+The handoff hooks keep a long session from running into the limits of a 1M
+context window. When the current context reaches 444,000 tokens (an absolute
+count, so it only ever fires on 1M-context models), Claude asks you to pick
+**Write handoff and clear** or **Continue**. On wrap-up it writes
+`.claude/handoff.md` (what is done, next steps, decisions, open questions, key
+files) and asks you to run `/clear`; the new session starts with that note,
+which is then renamed to `handoff.md.used` so it loads only once. It asks once
+per session; on **Continue**, or in a headless run, nothing is written. Set
+`EETC_HANDOFF_TOKENS` to change the threshold. Hooks don't receive context
+usage, so the project's `.claude/statusline.sh` writes it to
+`${TMPDIR:-/tmp}/claude-ctx-<session_id>`: without the current status line
+the hook never fires. Projects set up before plugin 0.11.0 need
+`/eetc:claude-code-setup` re-run to get it. The status line refreshes on its
+own schedule, so the question can come one turn late.
 
 Project-specific knowledge (architecture, fixtures, clients to mock, tooling
 commands, permissions, statusline) stays in each project's CLAUDE.md,
@@ -65,8 +82,10 @@ still decide what runs without asking: read-only commands and `git add` /
 On Linux the sandbox needs `bubblewrap` and `socat`.
 
 It also installs `.claude/statusline.sh` (model, branch, context bar, cost or
-tokens, 5-hour usage with its reset time). It works on macOS and Linux and
-needs `jq`.
+tokens, 5-hour usage with its reset time), which also feeds the handoff
+hook, and adds `.claude/handoff.md*` to `.gitignore`. It works on macOS and
+Linux and needs `jq`. Status lines are copied per project, so re-run
+`/eetc:claude-code-setup` in existing projects to pick up template changes.
 
 ## Install
 
@@ -125,8 +144,8 @@ python3 tests/test_hooks.py
 
 They feed JSON to each hook and check what it prints: which test commands the
 test hook rewrites and approves (and which must pass through), what the trim
-hook cuts or leaves alone, and that the format hook is a no-op without a
-formatter config. Run them after every hook change.
+hook cuts or leaves alone, that the format hook is a no-op without a
+formatter config, and when the handoff hooks ask, stay quiet or load the note. Run them after every hook change.
 
 Skill trigger evals (`evals/`, run with `claude plugin eval`):
 
