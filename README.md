@@ -104,9 +104,13 @@ cd ~/PycharmProjects/eetc_data_hub
 claude --plugin-dir ~/IdeaProjects/eetc-claude-code   # eetc:* skills appear next to the project's own
 ```
 
-Hook check:
+Hook tests (Python 3 stdlib, plus `bash` and `jq` like the hooks themselves):
 
 ```bash
-echo '{"tool_input":{"command":"pytest -q"}}' | bash hooks/filter-test-output.sh
-echo '{"tool_input":{"command":"pytest; rm x"}}' | bash hooks/filter-test-output.sh   # {}
+python3 tests/test_hooks.py
 ```
+
+They feed JSON to each hook and check what it prints: which test commands the
+test hook rewrites and approves (and which must pass through), what the trim
+hook cuts or leaves alone, and that the format hook is a no-op without a
+formatter config. Run them after every hook change.
