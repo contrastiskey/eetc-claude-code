@@ -17,6 +17,7 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test` / `mvn verify` and `cargo test` / `cargo nextest run` output to failures and the summary |
 | hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
 | hook | `hooks/trim-output.sh` | shrinks what Claude sees from *successful* noisy commands: installs (`pip`, `uv`, `poetry`, `npm`, `pnpm`, `yarn`) and `docker build` keep their first/last lines plus warnings and summaries; `cargo build/check/clippy/doc` drop crate progress lines; `mvn` lifecycle builds keep only warnings, errors and the summary; git diffs/logs replace each lockfile's diff with one line |
+| hook | `hooks/review-agents-on-sonnet.sh` | runs `/simplify`'s review agents (reuse, simplification, efficiency, altitude) on Sonnet instead of the session's model; other agents, and calls that already pick a model, are untouched |
 | hook | `hooks/context-handoff.sh` | `Stop`: once a session's current context reaches 444,000 tokens, Claude asks whether to write a handoff note and `/clear`, or continue (once per session) |
 | hook | `hooks/load-handoff.sh` | `SessionStart` after `/clear`: loads that handoff note into the new session |
 

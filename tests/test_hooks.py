@@ -373,5 +373,28 @@ class ContextHandoff(unittest.TestCase):
         self.assertEqual(hooks["SessionStart"][0]["matcher"], "clear")
 
 
+class ReviewAgentsOnSonnet(unittest.TestCase):
+    def model(self, **tool_input):
+        """Returns the model the hook sets, or None if it leaves the call alone."""
+        out = run_hook("review-agents-on-sonnet.sh", {"tool_input": {"prompt": "p", **tool_input}})
+        if not out:
+            return None
+        updated = json.loads(out)["hookSpecificOutput"]["updatedInput"]
+        self.assertEqual(updated["prompt"], "p")
+        return updated["model"]
+
+    def test_simplify_review_agents_run_on_sonnet(self):
+        for description in ["Reuse review of diff", "Simplify review: altitude", "Efficiency review",
+                            "Simplification review of move", "Hub simplify review: reuse"]:
+            with self.subTest(description=description):
+                self.assertEqual(self.model(description=description, subagent_type="Explore"), "sonnet")
+
+    def test_other_agents_and_explicit_models_are_left_alone(self):
+        self.assertIsNone(self.model(description="Find auth handlers"))
+        self.assertIsNone(self.model(description="Fetch hooks docs"))
+        self.assertIsNone(self.model())
+        self.assertIsNone(self.model(description="Reuse review", model="opus"))
+
+
 if __name__ == "__main__":
     unittest.main()
