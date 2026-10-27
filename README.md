@@ -3,6 +3,40 @@
 Shared Claude Code config for EETC projects, packaged as the `eetc` plugin.
 This repo is also its own marketplace (`eetc-claude-code`).
 
+## Summary
+
+**The ultimate bootstrap, bang-for-your-buck Claude Code setup.** One install
+and one command give any project a safe, consistent setup that cuts token usage
+without cutting code quality. Claude writes simple code to the same high
+standards in every repo, reads only what matters, and spends your budget on the
+work instead of on noise.
+
+- **Fewer tokens, same quality.** Test runs are cut to failures and the
+  summary; installs, builds and lockfile diffs to the lines that matter.
+  Skills load only when a task needs them and review agents run on Sonnet.
+  Errors still reach Claude in full, and the style skills, formatter and
+  conventions keep the code to standard.
+- **Simple code, no over-engineering.** The bundled `ponytail` plugin pushes
+  Claude to the simplest solution that works: reuse what's there, standard
+  library before new dependencies, no speculative abstractions. Less code to
+  review and maintain, and fewer tokens spent writing it.
+- **A map of the codebase.** Setup writes a `codebase-overview` skill with the
+  architecture, data flows, external services and conventions, so Claude reads
+  one file instead of re-exploring dozens.
+- **Same standards everywhere.** Industry-standard style for Python, Java, Rust
+  and TypeScript (PEP 8, Google style guides, Effective Java, Rust API
+  Guidelines), plus FastAPI, Django and git conventions. Change them here once
+  and every project gets the update.
+- **One-command, safe setup.** `/eetc:claude-code-setup` writes a sandboxed
+  `.claude/settings.json`, `CLAUDE.md`, the overview and a status line once you
+  approve them. Secrets stay out of reach, and safe commands skip the prompt.
+- **Auto-formatting.** Every file Claude edits goes through the project's own
+  formatter (`ruff`, `rustfmt`, `google-java-format`).
+- **No context wall.** Before a long session fills its context, Claude offers
+  to write a handoff note and carry on in a fresh session.
+- **Tested.** Hook tests and skill-trigger evals check that each hook touches
+  only what it should and each skill loads only for its language.
+
 ## Contents
 
 | Component | Name | Applies to |
