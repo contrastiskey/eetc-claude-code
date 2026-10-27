@@ -54,10 +54,11 @@ Skill: `eetc:django-patterns`
 
 <!-- ALWAYS: the last three rules, renumbered to follow the ones above. -->
 
-**N. YOU MUST run /simplify after writing code and before running tests**
-After finishing an implementation, invoke the `/simplify` skill to review
-the changed code for reuse, quality, and efficiency — and fix any issues
-found — before proceeding to run tests.
+**N. YOU MUST run /simplify after changes of 100+ lines and before running tests**
+When an implementation adds or changes 100 or more lines in total (check with
+`git diff --stat`), invoke the `/simplify` skill to review the changed code
+for reuse, quality, and efficiency — and fix any issues found — before
+proceeding to run tests. Skip it for smaller changes.
 
 **N. YOU MUST check and update the codebase-overview skill if needed after any major code change**
 Once you finish editing code in a way that adds, removes, or reshapes a layer,
