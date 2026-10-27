@@ -76,6 +76,8 @@
         "plugins.gradle.org",
         "services.gradle.org",
         "registry.npmjs.org",
+        "proxy.golang.org",
+        "sum.golang.org",
         "github.com",
         "*.githubusercontent.com"
       ]

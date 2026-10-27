@@ -61,11 +61,13 @@ Check the repo root (and one level down for monorepos):
 | `fastapi` in deps | FastAPI |
 | `pom.xml` / `build.gradle*` | Java (Maven / Gradle) — version from `maven.compiler.release`/`source` or `java.version` |
 | `Cargo.toml` | Rust |
+| `go.mod` | Go — version from its `go` line |
 | `package.json` | Node / frontend (can coexist with the above) |
 
-Also note: test runner and layout, formatter (black / ruff / Spotless), the
-`Makefile` targets, a `.venv/`, deploy manifests (Dockerfile, `cloudbuild.yaml`,
-`*.yaml` jobs), and secrets files present (names only).
+Also note: test runner and layout, formatter / linter (black / ruff /
+Spotless / golangci-lint), the `Makefile` targets, a `.venv/`, deploy
+manifests (Dockerfile, `cloudbuild.yaml`, `*.yaml` jobs), and secrets files
+present (names only).
 
 ## Step 2 — Inventory existing config
 
@@ -88,9 +90,9 @@ Read `CLAUDE.md`, `.claude/settings.json`, `.claude/skills/*`,
 - **Keep** — other project skills (e.g. `implement-research-paper`),
   `model`, `effortLevel`, other plugins/marketplaces, existing permissions
   and sandbox settings. List broad existing allow rules (`Bash(git *)`,
-  `Bash(mvn *)`, `Bash(cargo *)`, `Bash(uv *)`, `Bash(find *)`, `Bash(sed *)`,
-  `Bash(awk *)`...) in the proposal as "consider narrowing" to the rules
-  below; only change them if the user agrees.
+  `Bash(mvn *)`, `Bash(cargo *)`, `Bash(go *)`, `Bash(uv *)`, `Bash(find *)`,
+  `Bash(sed *)`, `Bash(awk *)`...) in the proposal as "consider narrowing"
+  to the rules below; only change them if the user agrees.
 - **Status line** — an existing `statusLine` that doesn't run
   `.claude/statusline.sh`, or a `.claude/statusline.sh` that differs from the
   template, is replaced by the standard one. Show the diff in Step 4b.
@@ -184,6 +186,7 @@ both forms, bare and with ` *` (e.g. `Bash(cargo test)` and `Bash(cargo test *)`
 | Maven | `mvn compile`, `mvn test`, `mvn verify` |
 | Gradle | `./gradlew build`, `./gradlew test`, `./gradlew check` |
 | Rust | `cargo build`, `cargo check`, `cargo clippy`, `cargo test`, `cargo fmt`, `cargo doc`, `cargo nextest run` |
+| Go | `go build`, `go vet`, `go test`, `go fmt`, `go mod tidy`, `go mod download`, plus `golangci-lint run` when the repo configures it. Never `go run`, `go generate` or `go install` |
 | Makefile | `Bash(make <target>)` for each local-only target (format, test, coverage, install, run). **Never** deploy, publish, release or anything touching production |
 
 | Secrets present | Add to `deny` | Add to `sandbox.filesystem.denyRead` |
@@ -210,9 +213,14 @@ Per project, add to the sandbox only what its workflows need: a private
 registry or mirror to `network.allowedDomains`, a tool that can't run
 sandboxed (e.g. `gcloud *`, `psql *`) to `excludedCommands`. Testcontainers
 needs the Docker socket (`network.allowUnixSockets`), which gives sandboxed
-commands full Docker access, so ask before adding it. On Linux and WSL2 the
-sandbox needs `bubblewrap` and `socat`; without them commands run unsandboxed
-with the normal prompts.
+commands full Docker access, so ask before adding it. Go keeps its module and
+build caches outside the project (`go env GOMODCACHE GOCACHE`; by default
+`~/go/pkg/mod`, plus `~/Library/Caches/go-build` on macOS or
+`~/.cache/go-build` on Linux), where sandboxed commands can't write. Ask
+before adding them to `filesystem.allowWrite`: it lets sandboxed commands
+change cached code that builds outside the sandbox also use. On Linux and
+WSL2 the sandbox needs `bubblewrap` and `socat`; without them commands run
+unsandboxed with the normal prompts.
 
 Validate with `jq . .claude/settings.json`.
 
@@ -260,8 +268,9 @@ leftovers from superseded skills (Step 2).
   are fine).
 - Every `eetc:*` skill named in CLAUDE.md exists in the plugin
   (`python-code-style`, `python-tests`, `java-code-style`, `java-docs`,
-  `java-tests`, `rust-code-style`, `rust-tests`, `typescript-code-style`,
-  `fastapi-patterns`, `django-patterns`, `git-conventions`).
+  `java-tests`, `rust-code-style`, `rust-tests`, `go-code-style`, `go-tests`,
+  `typescript-code-style`, `fastapi-patterns`, `django-patterns`,
+  `git-conventions`).
 - No secrets file was read, and no value from one appears in any written file.
 
 Finish with a short summary: files created / changed / deleted, existing

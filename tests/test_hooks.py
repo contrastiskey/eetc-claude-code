@@ -241,6 +241,7 @@ class FormatOnEdit(unittest.TestCase):
             "x.py": "import os,sys\nx=  1\n",
             "x.rs": "fn main(){let x=1;}\n",
             "X.java": "class X{void f(){int x=1;}}\n",
+            "x.go": "package x\nfunc f(){x:=1}\n",
         }
         with tempfile.TemporaryDirectory() as tmp:
             for name, source in sources.items():
@@ -254,6 +255,24 @@ class FormatOnEdit(unittest.TestCase):
                     )
                     self.assertEqual(out, "")
                     self.assertEqual(path.read_text(), source)
+
+    def test_gofmt_runs_in_go_modules_but_not_on_testdata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            # a stub gofmt on PATH that marks the file it was asked to format
+            (root / "bin").mkdir()
+            gofmt = root / "bin" / "gofmt"
+            gofmt.write_text('#!/bin/bash\necho formatted > "$2"\n')
+            gofmt.chmod(0o755)
+            (root / "go.mod").write_text("module example.com/x\n")
+            (root / "testdata").mkdir()
+            env = {"PATH": f"{root / 'bin'}:{os.environ['PATH']}"}
+            for name, want in {"x.go": "formatted\n", "testdata/in.go": "package x\n"}.items():
+                with self.subTest(name):
+                    path = root / name
+                    path.write_text("package x\n")
+                    run_hook("format-on-edit.sh", {"tool_input": {"file_path": str(path)}}, env=env)
+                    self.assertEqual(path.read_text(), want)
 
 
 class Statusline(unittest.TestCase):

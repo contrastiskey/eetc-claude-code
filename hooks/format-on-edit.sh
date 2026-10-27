@@ -54,5 +54,10 @@ case "$f" in
     cat "$root"/{pom.xml,build.gradle,build.gradle.kts} 2>/dev/null | grep -qi aosp && args+=(--aosp)
     "$bin" "${args[@]}" "$f"
     ;;
+  */testdata/*.go | */vendor/*.go) ;; # the go tool skips these; fixtures may be unformatted on purpose
+  *.go)
+    config_dir . go.mod && bin=$(command -v gofmt) || exit 0
+    "$bin" -w "$f"
+    ;;
 esac >/dev/null 2>&1
 exit 0

@@ -23,15 +23,15 @@ work instead of on noise.
 - **A map of the codebase.** Setup writes a `codebase-overview` skill with the
   architecture, data flows, external services and conventions, so Claude reads
   one file instead of re-exploring dozens.
-- **Same standards everywhere.** Industry-standard style for Python, Java, Rust
-  and TypeScript (PEP 8, Google style guides, Effective Java, Rust API
-  Guidelines), plus FastAPI, Django and git conventions. Change them here once
-  and every project gets the update.
+- **Same standards everywhere.** Industry-standard style for Python, Java, Rust,
+  Go and TypeScript (PEP 8, Google style guides, Effective Java, Rust API
+  Guidelines, Effective Go), plus FastAPI, Django and git conventions. Change
+  them here once and every project gets the update.
 - **One-command, safe setup.** `/eetc:claude-code-setup` writes a sandboxed
   `.claude/settings.json`, `CLAUDE.md`, the overview and a status line once you
   approve them. Secrets stay out of reach, and safe commands skip the prompt.
 - **Auto-formatting.** Every file Claude edits goes through the project's own
-  formatter (`ruff`, `rustfmt`, `google-java-format`).
+  formatter (`ruff`, `rustfmt`, `google-java-format`, `gofmt`).
 - **No context wall.** Before a long session fills its context, Claude offers
   to write a handoff note and carry on in a fresh session.
 - **Tested.** Hook tests and skill-trigger evals check that each hook touches
@@ -47,10 +47,11 @@ work instead of on noise.
 | skill | `eetc:django-patterns` | Django / DRF projects |
 | skill | `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs` | Java |
 | skill | `eetc:rust-code-style`, `eetc:rust-tests` | Rust |
+| skill | `eetc:go-code-style`, `eetc:go-tests` | Go |
 | skill | `eetc:typescript-code-style` | TypeScript / JavaScript |
 | skill | `/eetc:claude-code-setup` (user-invoked) | any repo: creates or re-standardizes `.claude/settings.json`, `CLAUDE.md` and the `codebase-overview` skill from the templates in `skills/claude-code-setup/templates/` |
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test` / `mvn verify` and `cargo test` / `cargo nextest run` output to failures and the summary |
-| hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
+| hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected), `gofmt` (Go modules, except `testdata/` and `vendor/`) |
 | hook | `hooks/trim-output.sh` | shrinks what Claude sees from *successful* noisy commands: installs (`pip`, `uv`, `poetry`, `npm`, `pnpm`, `yarn`) and `docker build` keep their first/last lines plus warnings and summaries; `cargo build/check/clippy/doc` drop crate progress lines; `mvn` lifecycle builds keep only warnings, errors and the summary; git diffs/logs replace each lockfile's diff with one line |
 | hook | `hooks/review-agents-on-sonnet.sh` | runs `/simplify`'s review agents (reuse, simplification, efficiency, altitude) on Sonnet instead of the session's model; other agents, and calls that already pick a model, are untouched |
 | hook | `hooks/context-handoff.sh` | `Stop`: once a session's current context reaches 444,000 tokens, Claude asks whether to write a handoff note and `/clear`, or continue (once per session) |
@@ -185,7 +186,7 @@ formatter config, and when the handoff hooks ask, stay quiet or load the note. R
 Skill trigger evals (`evals/`, run with `claude plugin eval`):
 
 ```bash
-evals/run.sh                                   # all 9 cases × 3 runs
+evals/run.sh                                   # all 11 cases × 3 runs
 evals/run.sh --case rust-code-style --runs 1   # one case, one run
 ```
 
@@ -193,7 +194,7 @@ Each language skill has a case that must load it and must not load the other
 languages' skills (e.g. a Rust task never loads `python-code-style`). Another
 case, an unrelated question, must load no eetc skill. Every run is a real
 Claude session on your account: one case-run costs about $0.05 to $0.20, so a
-full run is roughly $2 to $5. The script evaluates a temp copy of the plugin
+full run is roughly $2 to $7. The script evaluates a temp copy of the plugin
 without `dependencies`, because the isolated eval session can't install
 ponytail or typesafe and would silently skip the plugin. Reports go to
 `evals/results/` (git-ignored).
