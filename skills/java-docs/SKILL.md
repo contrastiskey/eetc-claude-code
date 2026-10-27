@@ -1,228 +1,213 @@
 ---
 name: java-docs
 description: >
-  Javadoc conventions: structure, tag order, null contracts, thread-safety
-  phrasing, records, sealed types, enums, package-info.java, @apiNote and
-  @implNote.
+  Javadoc conventions that follow established industry standards: the Google
+  Java Style Guide, Oracle's "How to Write Doc Comments", and Effective Java.
+  Covers where Javadoc is required, its form, the summary fragment, block
+  tags and their order, exceptions, null contracts, thread safety, docs for
+  inheritance, generics, records, enums, sealed types, packages and
+  deprecation.
   TRIGGER when: writing or reviewing Javadoc on Java code, or asked to
   "document" / "add javadoc".
   DO NOT TRIGGER when: working in a non-Java language.
 ---
 
-# Java Documentation (Javadoc) Best Practices
+# Javadoc
 
-## Scope
+Sources. Earlier ones win a disagreement:
 
-- **Public and protected members** must have Javadoc comments.
-- **Package-private and private members** should also be documented when they are complex or not self-explanatory.
+1. [Google Java Style Guide §7](https://google.github.io/styleguide/javaguide.html#s7-javadoc).
+2. Oracle's *How to Write Doc Comments for the Javadoc Tool*, linked from
+   the [Javadoc Tool page](https://www.oracle.com/java/technologies/javase/javadoc-tool.html).
+3. *Effective Java*, 3rd edition: items 19 (inheritance), 56 (doc
+   comments), 74 (exceptions) and 82 (thread safety), cited as EJ n.
 
-## Structure
+## Where Javadoc is required
 
-The first sentence is the summary description. It must:
-- Concisely state what the method/type does.
-- End with a period.
-- Be written in third-person singular present tense for methods (e.g., "Returns the current value.", "Flushes all pending rows.").
+- Every visible class, member and record component. That means every
+  `public` class, and every `public` or `protected` member of one (§7.3,
+  EJ 56).
+- Optional on a simple, obvious member such as `getFoo()`, when there is
+  truly nothing to say beyond "the foo". This is never a reason to leave out
+  something a reader needs, such as what a domain term means (§7.3.1).
+- Optional on an override that doesn't change the contract (§7.3.2).
+- Anywhere else, a comment that states a class's or method's purpose is
+  written as Javadoc, not as a `//` comment (§7.3.4).
 
-Subsequent paragraphs (separated by `<p>`) can elaborate on behaviour, constraints, or edge cases.
+## Form
 
-## Tags
+- Traditional `/** ... */` or Markdown `///` (JDK 23+) are both fine (§7.1).
+  Match the file and the project, and use Markdown only when the build's JDK
+  supports it.
+- The single-line form `/** Returns the customer ID. */` is for docs that
+  fit on one line and have no block tags.
+- Traditional paragraphs are separated by a ` *` line. Every paragraph after
+  the first starts with `<p>` directly before its first word, but not before
+  `<ul>` or `<table>`. Markdown paragraphs are separated by a blank `///`
+  line, with no `<p>` (§7.1.2).
+- Inline code is `{@code ...}` (backticks in Markdown). Code blocks are
+  `<pre>{@code ... }</pre>` (fenced blocks in Markdown). Link a type or
+  member with `{@link Type#method(Param)}`, on its first mention only.
+- Write for both readers: the source must read well, not only the HTML.
 
-Use tags in this order when applicable:
+## The summary fragment
 
-| Tag | Usage |
-|-----|-------|
-| `@param <name>` | One per parameter. Description starts lowercase, no trailing period. |
-| `@param <T>` | For type parameters in generic types or methods. |
-| `@return` | Describes the return value. Omit for `void`. Starts lowercase, no trailing period. |
-| `@throws` / `@exception` | One per checked or notable unchecked exception. Describes when it is thrown. |
-| `@see` | Reference to a related type or member (e.g., `@see Writer#flush()`). |
-| `@since` | Version or milestone when this member was introduced (e.g., `@since 1.0`). |
-| `@version` | Version of the member, if tracked separately from the class. |
-| `@author` | Author of the code. Use on type-level Javadoc; omit on individual methods. |
-| `@deprecated` | Marks a member as deprecated. Always include an alternative in the description. |
+- The first sentence is the summary, and indexes show it alone. It's a
+  fragment, capitalized and punctuated like a sentence (§7.2):
+  - Methods and constructors: a third-person verb phrase. "Returns the
+    customer ID.", "Creates a reader for the given file."
+  - Classes and fields: a noun phrase. "An immutable money amount."
+  - Never "This method returns ...", "A {@code Foo} is a ...", or an
+    imperative ("Save the record.").
+- A getter whose summary would only repeat `@return` uses
+  `/** {@return the customer ID} */` (JDK 16+). A bare `@return` with no
+  summary is wrong.
+- No two members share a summary; overloads say how they differ (EJ 56).
+- In traditional Javadoc, the summary ends at the first period followed by
+  a space. "e.g. " ends it early, so write "for example".
 
-## Inline tags
+## Method contracts
 
-- `{@code someValue}` — for inline code references (type names, method names, literals).
-- `{@link SomeClass#method()}` — for hyperlinked references.
-- `{@inheritDoc}` — inherit documentation from the supertype. Add extra prose only when this implementation differs meaningfully from the contract.
+Document what the method does, not how: preconditions, postconditions and
+side effects (EJ 56).
 
-## Code blocks
-
-Use `<pre>{@code ... }</pre>` for multi-line code examples:
+- Block tags appear in this order, and the first four never have an empty
+  description (§7.1.3): `@param` (type parameters as `@param <T>`),
+  `@return`, `@throws`, `@deprecated`, then `@see` and `@since`.
+- `@param` and `@return` descriptions are noun phrases: lowercase, with no
+  period unless more sentences follow. A continuation line is indented 4
+  spaces from the `@` (2 in Markdown).
+- `@return` is omitted for `void` and when the summary uses `{@return}`.
+- `@throws` for every checked exception, and for each unchecked exception
+  that's part of the contract, such as a violated precondition. Phrase it as
+  a condition: "if {@code count} is negative". Unchecked exceptions never go
+  in the `throws` clause (EJ 74).
+- Skip `@author` and `@version`; version control records both.
 
 ```java
 /**
- * Writes a row to the store via the provided connection.
+ * Writes a record to the store, replacing any record with the same key.
  *
- * <p>The connection is not thread-safe; callers must ensure external synchronisation
- * or use one connection per thread.
+ * <p>The write is durable once this method returns.
  *
  * <pre>{@code
  * try (var conn = store.connect()) {
- *     writer.write(record, conn);
+ *   writer.write(record, conn);
  * }
  * }</pre>
  *
- * @param record the record to write; must not be {@code null}
- * @param conn   the connection for the current thread
- * @throws IllegalArgumentException if {@code record} is missing a required field
+ * @param record the record to write
+ * @param conn an open connection, used by one thread at a time
+ * @return the record's new version number
+ * @throws IllegalArgumentException if {@code record} has no key
+ * @throws StorageException if the store rejects the write
  */
-void write(Record record, Connection conn);
-```
-
-## Deprecation
-
-When deprecating, always provide a replacement:
-
-```java
-/**
- * @deprecated Use {@link #newMethod()} instead.
- */
-@Deprecated
-void oldMethod();
+long write(Record record, Connection conn) throws StorageException;
 ```
 
 ## Null contracts
 
-State nullability explicitly in `@param` and `@return` descriptions — don't assume the reader will check the implementation:
+- With nullness annotations (JSpecify `@NullMarked`, NullAway), the
+  signature carries nullability (`@Nullable String`). The Javadoc only says
+  what `null` means: "or {@code null} if the user has no email".
+- Without annotations, state it in prose. Either say per parameter and
+  return value which may be `null`, or set a default once at the package or
+  class level: "Unless otherwise noted, passing {@code null} to any method
+  throws {@link NullPointerException}."
+- A method that returns a collection, array or `Optional` never returns
+  `null`; don't document it as if it might.
 
-```java
-/**
- * @param symbol the instrument symbol; must not be {@code null}
- * @return the matching contract, or {@code null} if none exists
- */
-```
+## Thread safety
 
-If the method uses `Objects.requireNonNull` at entry, the `@param` must say "must not be {@code null}". If a method never returns null, say so or document the empty-collection / `Optional.empty()` alternative instead.
+Every class states its thread safety in its class-level Javadoc, using one
+of these levels (EJ 82):
 
-## Thread-safety
+| Level | Wording |
+|-------|---------|
+| Immutable | "Instances of this class are immutable." |
+| Unconditionally thread-safe | "This class is thread-safe." |
+| Conditionally thread-safe | "This class is thread-safe, except that ..." plus which call sequences need external synchronization and on which lock |
+| Not thread-safe | "This class is not thread-safe. Each thread must use its own instance, or synchronize externally." |
 
-Document thread-safety at the class level. Pick one of these standard phrasings and add it as a `<p>` in the type-level Javadoc:
+- The `synchronized` modifier is not documentation; it doesn't appear in the
+  generated docs and isn't part of the contract.
+- Document a conditionally thread-safe class's lock, for example "Callers
+  must synchronize on the returned map while iterating."
 
-```java
-/**
- * Writer that batches order rows into the database.
- *
- * <p>This class is not thread-safe. Each thread must use its own instance.
- */
-```
+## Classes designed for inheritance
 
-```java
-/**
- * Registry of open positions shared across writer threads.
- *
- * <p>This class is thread-safe.
- */
-```
+- A class meant to be subclassed documents its self-use: which overridable
+  methods each method calls, and when (EJ 19). Write this under `@implSpec`.
+- `@implSpec` (implementation requirements), `@apiNote` (guidance for
+  callers) and `@implNote` (notes on this implementation only) are JDK
+  custom tags. The `javadoc` tool rejects them unless the build registers
+  them, e.g. `-tag implSpec:a:"Implementation Requirements:"` via the
+  maven-javadoc-plugin's `<tags>`. Without that, write the note as a normal
+  paragraph.
 
-Do not leave thread-safety implied — the `eetc:java-code-style` skill requires explicit documentation on any class shared across threads.
+## Generics, records, enums and sealed types
 
-## Records
+- Document every type parameter: `@param <K> the type of keys`.
+- A record is documented in its declaration's Javadoc, with one `@param` per
+  component. Those become the docs for the components and their accessors:
 
-Document the record at the type level (what it represents, any invariants). Components are documented with `@param` tags on the canonical constructor — use the compact constructor form when adding validation:
-
-```java
-/**
- * A single market data tick received from the exchange.
- *
- * @param symbol     the instrument symbol; must not be {@code null}
- * @param exchangeTs exchange timestamp in epoch microseconds
- * @param price      last trade price in integer ticks
- */
-record Tick(String symbol, long exchangeTs, long price) {
-    Tick {
-        Objects.requireNonNull(symbol, "symbol");
-    }
-}
-```
-
-Do not add separate field-level Javadoc on record components — the canonical constructor `@param` tags are the authoritative documentation.
-
-## Sealed classes and interfaces
-
-Document the sealed type with a `@param <T>` or a prose description of the permitted subtypes. Each permitted subtype gets its own full Javadoc:
-
-```java
-/**
- * A lifecycle event emitted during a recording session.
- *
- * <p>Permitted subtypes: {@link TickReceived}, {@link SessionEnded}, {@link DumpCompleted}.
- */
-sealed interface SessionEvent permits TickReceived, SessionEnded, DumpCompleted {}
-
-/**
- * Emitted when a tick arrives from the exchange.
- *
- * @param tick the received tick; must not be {@code null}
- */
-record TickReceived(Tick tick) implements SessionEvent {}
-```
-
-## Enum constants
-
-Each enum constant can have its own Javadoc. Document constants that are not self-explanatory:
-
-```java
-enum SessionPhase {
-
-    /** Market is open; ticks are being consumed and written. */
-    RECORDING,
-
-    /** Session end time reached; draining remaining queued ticks. */
-    DRAINING,
-
-    /** Queue is empty; flushing the write buffer. */
-    FLUSHING,
-
-    /** Flush complete; exporting the session to long-term storage. */
-    DUMPING;
-}
-```
-
-## `@apiNote` and `@implNote`
-
-Use these standard JDK-style tags for important asides that don't fit in the main description:
-
-- `@apiNote` — guidance for callers (design intent, usage warnings, trade-offs):
   ```java
   /**
-   * Writes a row through the given connection.
+   * A money amount in one currency.
    *
-   * @apiNote This method is not thread-safe. The caller must ensure that a single
-   *          {@code Connection} instance is used by at most one thread at a time.
+   * @param amount the amount, at the currency's minor-unit scale
+   * @param currency the currency of {@code amount}
    */
+  public record Money(BigDecimal amount, Currency currency) {}
   ```
-- `@implNote` — notes about the current implementation that callers should be aware of but that may change:
+
+- Document each enum constant whose meaning isn't obvious from its name:
+
   ```java
-  /**
-   * @implNote Rows are buffered in memory until {@link #flush()} is called. Calling
-   *           this method does not guarantee the row is durable.
-   */
+  enum PaymentStatus {
+    /** Authorized; funds are held but not yet captured. */
+    AUTHORIZED,
+
+    /** Captured; funds will settle to the merchant. */
+    CAPTURED,
+  }
   ```
 
-These tags are rendered by standard Javadoc tooling — they do not need `<p>` wrapping.
+- A sealed type's Javadoc says what the hierarchy models. Its `permits`
+  list appears in the generated signature, so don't repeat it in prose. Each
+  permitted subtype documents itself.
+- Document every member of an annotation type (EJ 56).
 
-## `package-info.java`
+## Packages and modules
 
-Every package should have a `package-info.java` with a package-level Javadoc comment. Place it at the root of the package:
+- Each exported package has a `package-info.java` whose Javadoc says what
+  the package holds, names its main entry points, and states package-wide
+  conventions such as the nullness default. Annotations go after the
+  Javadoc, before `package`.
+- A module's `module-info.java` Javadoc describes the module.
+
+## Deprecation
+
+`@deprecated` says what to use instead, and when the old API goes if a
+removal is planned. Pair it with the `@Deprecated` annotation:
 
 ```java
 /**
- * Order routing and execution tracking.
+ * Returns the user's display name.
  *
- * <p>The main entry point is {@link com.eetc.orders.OrderRouter}.
- * See the project ADR for the overall lifecycle and threading model.
+ * @deprecated Use {@link #displayName()} instead. Removed in 3.0.
  */
-package com.eetc.orders;
+@Deprecated(since = "2.4", forRemoval = true)
+public String getName() {
+  return displayName();
+}
 ```
-
-Package Javadoc does not use `@author` or `@version`. Use it to orient a new reader, reference the ADR, and point to the key entry-point class.
 
 ## What to avoid
 
-- Restating the method name as the summary ("This method does X" where X is already the name).
-- Leaving `@param` or `@return` descriptions empty or with a single word that adds no value.
-- Documenting implementation details that belong in inline comments, not Javadoc.
-- Using `@author` on individual methods — apply it at the class/interface level only.
-- Omitting `@throws` for checked exceptions.
+- A summary that only restates the name (`/** Gets the name. */`). Say what
+  the value means, or use the self-explanatory exception.
+- Implementation details in Javadoc. They belong in `//` comments.
+- Empty or one-word tag descriptions.
+- Duplicating what annotations or the signature already say: types,
+  `@Nullable`, `throws` clauses for unchecked exceptions.

@@ -1,10 +1,11 @@
 ---
 name: rust-code-style
 description: >
-  Rust coding conventions: the Rust API Guidelines (naming, interoperability,
-  predictability, flexibility, type safety, dependability, debuggability,
-  future proofing, macros, documentation) and the rust-analyzer style guide
-  (control flow, allocations, imports).
+  Rust coding conventions that follow established industry standards: the
+  Rust API Guidelines and the rust-analyzer style guide. Covers naming,
+  interoperability, predictability, flexibility, type safety, dependability,
+  debuggability, future proofing, macros, documentation, control flow,
+  allocations and imports.
   TRIGGER when: writing, editing, formatting, or reviewing Rust code, or
   asked to "fix style" / "check code quality" in a Rust project.
   DO NOT TRIGGER when: working in a non-Rust language, or only reading code
@@ -41,15 +42,20 @@ rust-analyzer.
 | Errors | Own error type (C-GOOD-ERR) | `anyhow::Result` + `.context(...)` |
 | Zero-arg constructor | Both `new()` and `Default`, identical behavior (C-COMMON-TRAITS, C-CTOR) | `Default` instead of `new()` |
 
+Writing or changing a library crate's public API: also read
+[library-api.md](library-api.md) (iterators, Cargo features,
+interoperability traits, generics and object safety, future proofing,
+macros, publishing to crates.io).
+
 ## Naming
 
 ### Casing (C-CASE)
 
 | Item | Convention | Example |
 |------|-----------|---------|
-| Crate | `snake_case`, no `-rs` / `-rust` affix | `order_book` |
-| Module | `snake_case` | `tick_writer` |
-| Type / trait / enum variant | `UpperCamelCase` | `OrderWriter`, `SessionPhase::Draining` |
+| Crate | `snake_case`, no `-rs` / `-rust` affix | `http_client` |
+| Module | `snake_case` | `file_reader` |
+| Type / trait / enum variant | `UpperCamelCase` | `FileReader`, `Ordering::Less` |
 | Function / method / local | `snake_case` | `flush_buffer` |
 | General constructor | `new` or `with_more_details` | `Vec::with_capacity` |
 | Conversion constructor | `from_some_other_type` | `u64::from_str_radix` |
@@ -92,22 +98,8 @@ fn get_mut(&mut self, index: K) -> Option<&mut V>;
 unsafe fn get_unchecked(&self, index: K) -> &V;
 ```
 
-### Iterators (C-ITER, C-ITER-TY)
+### Word order (C-WORD-ORDER)
 
-Homogeneous collections provide `iter(&self)`, `iter_mut(&mut self)` and
-`into_iter(self)`, returning types named `Iter`, `IterMut`, `IntoIter`. Other
-iterator methods follow the same rule: `keys()` → `Keys`, `values()` → `Values`.
-
-### Features and word order (C-FEATURE, C-WORD-ORDER)
-
-- Cargo features have no placeholder words: `std`, not `use-std` / `with-std`.
-  No negative features (`no-std`) — features are additive.
-
-  ```toml
-  [features]
-  default = ["std"]
-  std = []
-  ```
 - Keep word order consistent with std: verb-object-error — `ParseIntError`,
   `RecvTimeoutError`, not `IntParseError`.
 
@@ -204,51 +196,12 @@ config methods chain, terminal methods build `T`.
 
 ## Interoperability
 
-### Common traits (C-COMMON-TRAITS, C-DEBUG, C-DEBUG-NONEMPTY)
-
-Because of the orphan rule, downstream crates can't add these for you. Derive
-every one that makes sense: `Debug`, `Clone`, `Copy`, `PartialEq`, `Eq`,
-`PartialOrd`, `Ord`, `Hash`, `Default`, plus `Display` for user-facing types.
-
-- **Every public type implements `Debug`.** Exceptions need strong justification.
-- A hand-written `Debug` never prints an empty string — empty values still show
-  delimiters (`""`, `[]`, `Foo { }`).
-
-### Conversion traits (C-CONV-TRAITS, C-CONV-SPECIFIC)
-
-- Implement `From`, `TryFrom`, `AsRef`, `AsMut`. Never implement `Into` /
-  `TryInto` — the blanket impls cover them.
-- Put ad-hoc conversions on the more specific type: `str::as_bytes` and
-  `str::from_utf8` live on `str`, not `[u8]`. Prefer `to_` / `as_` / `into_`
-  methods over `from_` for chaining.
-
-### Collections (C-COLLECT)
-
-Collection types implement `FromIterator` (enables `collect`, `partition`,
-`unzip`) and `Extend`.
-
-### Serde (C-SERDE)
-
-Data-structure types implement `Serialize` / `Deserialize`, in a library behind
-an optional feature named exactly `serde`:
-
-```toml
-[dependencies]
-serde = { version = "1.0", optional = true, features = ["derive"] }
-```
-
-### `Send` and `Sync` (C-SEND-SYNC)
-
-Types are `Send + Sync` where possible. Types holding raw pointers must get
-this right deliberately; lock it in with a test:
-
-```rust
-#[test]
-fn test_send_sync() {
-    fn assert_send_sync<T: Send + Sync>() {}
-    assert_send_sync::<MyType>();
-}
-```
+- Derive every common trait that makes sense (`Debug`, `Clone`, `PartialEq`,
+  `Eq`, `Hash`, `Default`, ...). Every public type implements `Debug`
+  (C-COMMON-TRAITS, C-DEBUG).
+- A library's public types also follow the conversion, collection, Serde,
+  `Send` / `Sync`, formatting and I/O rules in
+  [library-api.md](library-api.md).
 
 ### Error types (C-GOOD-ERR)
 
@@ -259,16 +212,6 @@ fn test_send_sync() {
   `"unexpected end of file"`, `"invalid IP address syntax"`. Same for
   `anyhow!` / `.context()` messages (*r-a*).
 - Don't implement the deprecated `Error::description`.
-
-### Number formatting (C-NUM-FMT)
-
-Types you'd use with `|` / `&` implement `UpperHex`, `LowerHex`, `Octal`,
-`Binary`. Quantity newtypes (`Nanoseconds(u64)`) don't need them.
-
-### Readers and writers (C-RW-VALUE)
-
-Generic I/O functions take `R: Read` / `W: Write` **by value**; `&mut R` works
-through std's blanket impls. Say so in the docs.
 
 ## Predictability
 
@@ -312,17 +255,6 @@ through std's blanket impls. Say so in the docs.
   fn register(name: &str) { let name = name.to_string(); /* ... */ }
   ```
 - Use `Copy` as a bound only when you actually need copies.
-- **Generics** (C-GENERIC): library APIs accept the widest reasonable input
-  (`fn foo<I: IntoIterator<Item = i64>>(iter: I)`, `impl AsRef<Path>`). See
-  [Library API vs application code](#library-api-vs-application-code) for when
-  to prefer concrete types.
-- **Object safety** (C-OBJECT): decide up front whether a trait is meant for
-  `dyn` use. If so, keep it object-safe and exclude generic methods with
-  `where Self: Sized`:
-
-  ```rust
-  fn visit<T>(&self, t: T) where Self: Sized;
-  ```
 
 ## Dependability
 
@@ -360,88 +292,6 @@ explicit `close(self) -> Result<()>` (or a non-blocking shutdown method) for
 teardown that can fail or wait; `Drop` does the infallible best effort and
 logs or ignores errors.
 
-## Future proofing
-
-### Sealed traits (C-SEALED)
-
-A trait only your crate should implement gets a private supertrait. You can
-then add methods without a breaking change. Say in the docs that it's sealed.
-
-```rust
-pub trait TheTrait: private::Sealed {
-    fn method(&self);
-}
-
-impl TheTrait for usize { /* ... */ }
-
-mod private {
-    pub trait Sealed {}
-    impl Sealed for usize {}
-}
-```
-
-### Private fields (C-STRUCT-PRIVATE)
-
-In a library's public API, public fields lock in the representation and rule
-out invariants. Reserve them for passive C-style data. Inside an application,
-*r-a* applies: make fields `pub` when there are no invariants; when there are,
-keep fields private, document the invariant, enforce it in the constructor,
-return borrows from getters, and add no setters:
-
-```rust
-// GOOD
-fn first_name(&self) -> &str { &self.first_name }
-
-// BAD
-fn first_name(&self) -> String { self.first_name.clone() }
-```
-
-### Hide implementation types (C-NEWTYPE-HIDE)
-
-Don't leak iterator-adapter chains or other internal types in signatures. Wrap
-them in a newtype, or return `impl Trait`:
-
-```rust
-pub struct MyTransformResult<I>(Enumerate<Skip<I>>);
-
-pub fn my_transform<I: Iterator>(input: I) -> MyTransformResult<I> {
-    MyTransformResult(input.skip(3).enumerate())
-}
-```
-
-### No duplicated derive bounds (C-STRUCT-BOUNDS)
-
-Don't put `Clone`, `PartialEq`, `PartialOrd`, `Debug`, `Display`, `Default`,
-`Error`, `Serialize`, `Deserialize` or `DeserializeOwned` bounds on a struct
-definition — `#[derive]` adds them per impl, and adding a bound later is a
-breaking change.
-
-```rust
-// GOOD
-#[derive(Clone, Debug, PartialEq)]
-struct Good<T> { /* ... */ }
-
-// BAD
-#[derive(Clone, Debug, PartialEq)]
-struct Bad<T: Clone + Debug + PartialEq> { /* ... */ }
-```
-
-Bounds on the struct are fine when it names an associated type of the trait,
-for `?Sized`, or when a `Drop` impl needs them.
-
-## Macros
-
-- Input syntax looks like the output (C-EVOCATIVE): use the `struct` keyword to
-  declare structs, `;` after constants, Rust-like punctuation.
-- Item macros accept attributes on every generated item, including `#[derive]`
-  and `#[cfg]` (C-MACRO-ATTR).
-- Item macros work at module scope and inside functions; test both
-  (C-ANYWHERE).
-- Item macros accept a visibility: private by default, `pub` if given
-  (C-MACRO-VIS).
-- `$t:ty` fragments work with primitives, relative/absolute/`super::` paths and
-  generics (C-MACRO-TY).
-
 ## Documentation
 
 ### Doc comments
@@ -474,26 +324,9 @@ for `?Sized`, or when a `Drop` impl needs them.
 
 ### Comments
 
-Comments are full sentences: capital letter, ending period (*r-a*). This
-differs from `eetc:python-code-style` on purpose — follow the language's own
-convention. Comment only non-obvious logic. Every `unsafe` block gets a
+Comments are full sentences: capital letter, ending period (*r-a*). Comment
+only non-obvious logic. Every `unsafe` block gets a
 `// SAFETY:` comment explaining why it's sound.
-
-## Publishing crates
-
-Only for crates published to crates.io:
-
-- `Cargo.toml` `[package]` has `description`, `license`, `repository`,
-  `keywords`, `categories` (and `authors` if the project uses it);
-  `documentation` only if not on docs.rs, `homepage` only if distinct
-  (C-METADATA).
-- Release notes list every significant change and flag breaking ones; tag each
-  release with an annotated tag (C-RELNOTES).
-- A crate at 1.0+ only exposes types from stable (1.0+) dependencies in its
-  public API — including via `From<dep::Error>` impls (C-STABLE).
-- The crate and its dependencies use permissive licenses; default is
-  `"MIT OR Apache-2.0"` with both license files, unless the repo already
-  chose one (C-PERMISSIVE).
 
 ## Code (*r-a*)
 

@@ -89,8 +89,8 @@ URLs rather than hand-rolled checks in views or services:
 
 ```python
 class ConversationCreate(RequestModel):
-    title: Optional[str] = None
-    collection_ids: List[uuid.UUID] = Field(min_length=1)  # 422 when empty
+    title: str | None = None
+    collection_ids: list[uuid.UUID] = Field(min_length=1)  # 422 when empty
 ```
 
 **Never subclass `pydantic.BaseModel` directly.** Every schema inherits from one
@@ -178,15 +178,16 @@ async def create_document(
     user: User = Depends(get_current_user),
     service: DocumentService = Depends(get_document_service),
 ) -> DocumentCreateResponse:
-    """
-    Creates a document row and enqueues its ingestion task (202 Accepted).
+    """Create a document row and enqueue its ingestion task (202 Accepted).
 
-    :param body: The document's source type and origin.
-    :param user: The authenticated user.
-    :param service: The injected document service.
-    :return: The new id, status, and optional upload URL.
-    """
+    Args:
+        body: The document's source type and origin.
+        user: The authenticated user.
+        service: The injected document service.
 
+    Returns:
+        The new id, status, and optional upload URL.
+    """
     return await service.create(user.id, body)
 ```
 
