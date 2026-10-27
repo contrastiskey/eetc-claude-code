@@ -10,7 +10,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 mkdir "$tmp/eetc"
-cp -R "$root"/{.claude-plugin,agents,hooks,skills,evals} "$tmp/eetc/"
+cp -R "$root"/{.claude-plugin,hooks,skills,evals} "$tmp/eetc/"
 rm -rf "$tmp/eetc/evals/results"
 jq 'del(.dependencies)' "$root/.claude-plugin/plugin.json" >"$tmp/eetc/.claude-plugin/plugin.json"
 
