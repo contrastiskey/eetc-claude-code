@@ -13,6 +13,7 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | skill | `eetc:django-patterns` | Django / DRF projects |
 | skill | `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs` | Java |
 | skill | `eetc:rust-code-style`, `eetc:rust-tests` | Rust |
+| skill | `eetc:typescript-code-style` | TypeScript / JavaScript |
 | skill | `/eetc:claude-code-setup` (user-invoked) | any repo: creates or re-standardizes `.claude/settings.json`, `CLAUDE.md` and the `codebase-overview` skill from the templates in `skills/claude-code-setup/templates/` |
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test` / `mvn verify` and `cargo test` / `cargo nextest run` output to failures and the summary |
 | hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
@@ -150,7 +151,7 @@ formatter config, and when the handoff hooks ask, stay quiet or load the note. R
 Skill trigger evals (`evals/`, run with `claude plugin eval`):
 
 ```bash
-evals/run.sh                                   # all 8 cases × 3 runs
+evals/run.sh                                   # all 9 cases × 3 runs
 evals/run.sh --case rust-code-style --runs 1   # one case, one run
 ```
 

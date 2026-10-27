@@ -18,8 +18,11 @@ jump straight to implementation.
 
 <!-- LANGUAGE RULES: keep the block for the repo's language, delete the rest.
      Python → python-code-style + python-tests. Java → java-code-style +
-     java-docs + java-tests. Rust → rust-code-style + rust-tests. No eetc
-     skill for the language (e.g. Go) → drop these rules. -->
+     java-docs + java-tests. Rust → rust-code-style + rust-tests.
+     TypeScript / JavaScript → typescript-code-style. Several languages
+     (e.g. a Python API with a TS frontend) → keep each one's blocks,
+     numbered in sequence. No eetc skill for the language (e.g. Go) → drop
+     these rules. -->
 
 **2. YOU MUST load and apply the python-code-style skill before writing any Python code**
 Skill: `eetc:python-code-style`
@@ -41,6 +44,9 @@ Skill: `eetc:rust-code-style`
 
 **3. YOU MUST load and apply the rust-tests skill before writing or modifying any Rust test**
 Skill: `eetc:rust-tests`
+
+**2. YOU MUST load and apply the typescript-code-style skill before writing or modifying any TypeScript or JavaScript code**
+Skill: `eetc:typescript-code-style`
 
 <!-- FRAMEWORK RULE: only for FastAPI or Django projects. -->
 
