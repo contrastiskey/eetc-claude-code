@@ -79,7 +79,7 @@ Read `CLAUDE.md`, `.claude/settings.json`, `.claude/skills/*`,
 `.claude/agents/*`, `.claude/commands/*`, `.claude/hooks/*` and any
 `.claude/*.sh`. Classify each item:
 
-- **Superseded by the eetc plugin** — per-repo copies of `code-style`,
+- **Superseded or dropped by the eetc plugin** — per-repo copies of `code-style`,
   `tests`, `git-conventions`, `fastapi-patterns`, `django-patterns`,
   `java-docs`, `simplify`, a `code-reviewer` agent, a test-output filter hook
   (`filter-test-output.sh` + its `PreToolUse` entry). Propose deleting them;

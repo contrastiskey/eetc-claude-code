@@ -12,7 +12,7 @@
     {
       "name": "eetc",
       "source": "./",
-      "description": "Shared Claude Code conventions, skills and agents for EETC projects"
+      "description": "Shared Claude Code conventions, skills and hooks for EETC projects"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "eetc",
   "version": "0.11.0",
-  "description": "Shared Claude Code conventions, skills and agents for EETC projects",
+  "description": "Shared Claude Code conventions, skills and hooks for EETC projects",
   "author": {
     "name": "contrastiskey"
   },

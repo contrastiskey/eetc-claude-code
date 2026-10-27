@@ -14,7 +14,6 @@ This repo is also its own marketplace (`eetc-claude-code`).
 | skill | `eetc:java-code-style`, `eetc:java-tests`, `eetc:java-docs` | Java |
 | skill | `eetc:rust-code-style`, `eetc:rust-tests` | Rust |
 | skill | `/eetc:claude-code-setup` (user-invoked) | any repo: creates or re-standardizes `.claude/settings.json`, `CLAUDE.md` and the `codebase-overview` skill from the templates in `skills/claude-code-setup/templates/` |
-| agent | `eetc:code-reviewer` | every repo; loads the matching skills |
 | hook | `hooks/filter-test-output.sh` | trims `pytest`, `python manage.py test`, `mvn test` / `mvn verify` and `cargo test` / `cargo nextest run` output to failures and the summary |
 | hook | `hooks/format-on-edit.sh` | formats each file Claude edits with the project's configured formatter: `ruff format` (`[tool.ruff]` / `ruff.toml`), `rustfmt` (Cargo projects), `google-java-format` (when the build file configures it, AOSP detected) |
 | hook | `hooks/trim-output.sh` | shrinks what Claude sees from *successful* noisy commands: installs (`pip`, `uv`, `poetry`, `npm`, `pnpm`, `yarn`) and `docker build` keep their first/last lines plus warnings and summaries; `cargo build/check/clippy/doc` drop crate progress lines; `mvn` lifecycle builds keep only warnings, errors and the summary; git diffs/logs replace each lockfile's diff with one line |
@@ -123,7 +122,7 @@ installs and enables both. Disabling either one disables `eetc`.
 
 ## Update
 
-1. Change skills/agents/hooks here, bump `version` in `.claude-plugin/plugin.json`.
+1. Change skills/hooks here, bump `version` in `.claude-plugin/plugin.json`.
 2. Commit and push to `master`.
 3. In Claude Code: `/plugin marketplace update eetc-claude-code`, then restart
    (or run `claude plugin update eetc@eetc-claude-code`).

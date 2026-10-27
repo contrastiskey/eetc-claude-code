@@ -82,7 +82,7 @@ General rules: `eetc:<language>-tests`<; framework patterns:
 
 ## Review Checklist (project-specific)
 
-<Bullets the `eetc:code-reviewer` agent checks in addition to the eetc skills:
+<Bullets to check when reviewing changes, in addition to the eetc skills:
 architecture rules, invariants, and pitfalls specific to this codebase.>
 
 - <rule>
